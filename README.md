@@ -10,5 +10,5 @@
   <li>Run main in the org.server.App</li>
   <li>Send request to http://localhost:9000/execute/{your work}</li>
 </ol>
-<p>service was handled in the org.server.service.execute</p>
+<p>service was handled in the org.server.service.Execute class</p>
 <p>@Path({work}) is path of doing that work and you can request to http://localhost:9000/execute/@Path({work})</p>
