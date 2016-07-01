@@ -76,6 +76,7 @@ public class Computer {
     A3_A4 a3a4 = new A3_A4();
     ID_FLOAT id_float = new ID_FLOAT();
 
+
     public Computer(){
         runable = true;
         enableintrrupt = true;
@@ -88,34 +89,63 @@ public class Computer {
         }
 //        cp0 = new CP0();
     }
-    
+
     public Register_file getRegisterFile(){
         return stage_id.getRegfile();
     }
-           
-    
+
+
     public String get_reg_monitor(){
         return stage_id.getRegfile().print();
     }
-    
+
     public String get_cache_mem(){
         return stage_mem.print();
     }
-        public static int Hex2Decimal(String hex) {
+    public static int Hex2Decimal(String hex) {
         int deci = (Integer.parseInt(hex, 16) - Integer.parseInt("400000", 16)) / 4;
         return deci;
     }
-
-
     public boolean runSingleSycle(){
 
         if (currentLineOfInstructions < lineOfInstructions) {
+            //System.out.println(currentLineOfInstructions + " in maaaaanamaaa");
             stage_if.action(modeBit);
+            //System.out.println(stage_if.getPC() + " okkkkkkk " +this.stage_if.getInstruction());
             Object ans=stage_id.action(modeBit);
             if(stage_id.isBranchFloat()){
                 if(ifid.getIns().substring(14,16).equals("01") && this.stage_id.reg_float.flag_code==1){//bc1t
-                    int offset=Integer.parseInt(stage_id.idFLoat.signExt,2);
+                    String ofs=stage_id.idFLoat.signExt;
+                    int offset=0;
+                    if(ofs.charAt(0)=='0'){
+                        offset=Integer.parseInt(stage_id.idFLoat.signExt,2);
+                    }
 
+                    else if(ofs.charAt(0)=='1'){
+                        boolean flag=true;
+                        String newAddress = "";
+                        for(int i=ofs.length()-1;i>=0;i--){
+                            if(flag){
+                                char ch = ofs.charAt(i);
+                                newAddress = ch + newAddress;
+                                if(ch=='1'){
+                                    flag=false;
+                                }
+                            }
+                            else{
+                                char ch = ofs.charAt(i);
+
+                                if(ch=='1'){
+                                    newAddress = '0' + newAddress;
+                                }
+                                if(ch=='0'){
+                                    newAddress = '1' + newAddress;
+                                }
+                            }
+                            offset = Integer.parseInt(newAddress, 2);
+                            offset = -1*offset;
+                        }
+                    }
                     //offset*=4;
                     stage_if.setPC(stage_if.getPC()+offset);
                     return true;
@@ -135,12 +165,14 @@ public class Computer {
                 A2_A3 a2a3=a2.action(a1a2);
                 A3_A4 a3a4=a3.action(a2a3);
                 this.exemem=a4.action(a3a4);
-                this.ifid.setPC(a4.exemem.getNew_PC());
+                this.exemem.setNew_PC(this.stage_if.getPC());
+
                 this.stage_mem.isFloat(this.exemem);
                 this.memwb=this.stage_mem.action(modeBit,aa);
                 this.memwb.setControlBits(cu_result);
                 this.stage_wb.isFloat(this.memwb);
                 this.stage_wb.action(modeBit);
+                currentLineOfInstructions=this.stage_if.getPC();
 
                 //System.out.println(this.stage_id.reg_float.getReg(1) + " vs "+this.stage_id.reg_float.getReg(2) + " " + this.stage_id.reg_float.getReg(3));
                 return true;
@@ -160,7 +192,7 @@ public class Computer {
                 String pc4bit = "0000";
                 String func_sign = "0111111111111111111";
                 String func_first = pc4bit.concat(func_sign);
-                
+
                 if(stage_exe.getJ_pc().equals(func_first.concat("1100100".concat("00")))){// function 100
                     System.out.println("func100");
                 }
@@ -172,24 +204,24 @@ public class Computer {
                 }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1100010".concat("00")))){// function 98
                     //this function make pcb for cpu
-                    
-                }  
+
+                }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1100001".concat("00")))){// function 97
                     //this function set time to variable in v0
                     int time = getRegfile().getRegfile(2);
                     timer.set_timer(time);
-                }  
+                }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1100000".concat("00")))){// function 96
                     //this function for content switch between process with pid in v0 and v1
-                    
-                }  
+
+                }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1011111".concat("00")))){// function 95
                     //initial PCB of programs
                     if(getRegfile().getRegfile(26)!=1){
                         programs = new PCB[3];
                         PCB program0 = new PCB(0,PCB.READY_STATE,1);
                         PCB program1 = new PCB(1,PCB.READY_STATE,2);
-                        PCB program2 = new PCB(2,PCB.READY_STATE,3); 
+                        PCB program2 = new PCB(2,PCB.READY_STATE,3);
                         programs [0] = program0;
                         programs [1] = program1;
                         programs [2] = program2;
@@ -198,8 +230,8 @@ public class Computer {
                             readyq.add(program);
                         }
                     }
-                    
-                    
+
+
                     getRegfile().setReg(26, 1);
                 }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1011110".concat("00")))){// function 94
@@ -222,7 +254,7 @@ public class Computer {
                     else
                         getRegfile().setReg(2, -1);
                 }
-                
+
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1011101".concat("00")))){// function 93
                     //this function for terminate running process : change schedulingState to finish
                     for (PCB program : programs) {
@@ -242,7 +274,7 @@ public class Computer {
                 }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1011011".concat("00")))){// function 91
                     //this function for Batch : choose one program and put it in v0 register if there is not return -1 in v0
-                    
+
                     int min = 1000;
                     for (PCB program : programs) {
                         if (program.getSchedulingState()==PCB.READY_STATE && program.getInputTime() < min) {
@@ -267,15 +299,15 @@ public class Computer {
                     currentProgram.setPC(currentProgram.getRegs().getRegfile(31));
                     currentProgram.setSchedulingState(PCB.BUSY_STATE);
                     currentProgram.setWait_time(wait_number);
-                }    
+                }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1011001".concat("00")))){// function 89
 //                    this function for Round Rabin  : choose one program and put it in v0 register if there is not return -1 in v0
 
-                }    
+                }
                 else if(stage_exe.getJ_pc().equals(func_first.concat("1011000".concat("00")))){// function 88
 //                    this function for MLFQ  : choose one program and put it in v0 register if there is not return -1 in v0
 
-                }    
+                }
 
                 else if(stage_exe.getJ_pc().equals(func_first.concat("0010100".concat("00")))){// function 20
                     //this function change pc to selected program (program pid must saved in v0)
@@ -296,28 +328,28 @@ public class Computer {
                             }
                         }
                     }
-                    
+
                     SegmentDefragmenter sd = programsHashmap.get(selected);
                     String startadd = sd.getCode_seg_start_address();
                     System.out.println("++++++++++++++++++++++++++++++++++++");
                     System.out.println("start address said : "+ startadd);
                     System.out.println("ra said: "+ Integer.toHexString(stage_id.regfile.getRegfile(31)*4));
                     System.out.println("++++++++++++++++++++++++++++++++++++");
-                    
-                        stage_if.setPC(Integer.parseInt(startadd, 16)/4);
-                    
-                    
+
+                    stage_if.setPC(Integer.parseInt(startadd, 16)/4);
+
+
                     lineOfInstructions = Integer.parseInt(startadd, 16)+sd.getCode_seg().size();
                     modeBit = false;
-                    HashMap<Integer, Instruction> cache = new HashMap<Integer, Instruction>();              
+                    HashMap<Integer, Instruction> cache = new HashMap<Integer, Instruction>();
 
                     int physicalAddress =Hex2Decimal(startadd);
                     baseAddress = physicalAddress;
                     sd.setCode_seg_start_address(parse8DigitHex(physicalAddress));
-			for (int i = 0; i < sd.getCode_seg().size(); i++) {
-			cache.put(stage_if.getPC()+i,new Instruction( sd.getCode_seg().get(i),parse8DigitHex(physicalAddress)));
-			physicalAddress++;
-                        }
+                    for (int i = 0; i < sd.getCode_seg().size(); i++) {
+                        cache.put(stage_if.getPC()+i,new Instruction( sd.getCode_seg().get(i),parse8DigitHex(physicalAddress)));
+                        physicalAddress++;
+                    }
                     stage_if.setIns_cache(cache);
                     if(Integer.parseInt(Integer.toString(currentProgram.getPC(), 8)) >= 400000){
                         stage_if.setPC(currentProgram.getPC()*4/4);
@@ -343,19 +375,19 @@ public class Computer {
             if (stage_exe.isJumpReg()){
                 int pc = stage_exe.getIdexe().getRS_DATA();
                 stage_exe.getExemem().setControlBits("0000000000100");
-                stage_if.setPC(pc); 
+                stage_if.setPC(pc);
             }
             if (stage_exe.isBranch()) {
-                if(stage_exe.isBranchFloat()){
-                    if(ifid.getIns().substring(14,16).equals("01") && this.stage_id.reg_float.flag_code==1){//bc1t
-                        int offset=Integer.parseInt(stage_exe.getIdexe().getSignExt());
-                        offset*=4;
-                        stage_if.setPC(stage_if.getPC()+offset);
-                    }
-                }
+//                if(stage_exe.isBranchFloat()){
+//                    if(ifid.getIns().substring(14,16).equals("01") && this.stage_id.reg_float.flag_code==1){//bc1t
+//                        int offset=Integer.parseInt(stage_exe.getIdexe().getSignExt());
+//                        offset*=4;
+//                        stage_if.setPC(stage_if.getPC()+offset);
+//                    }
+//                }
                 if (exemem.getALU_result() == 0 && !stage_exe.isNot()) {
                     int offset;
-                    
+
                     offset = Integer.parseInt(stage_exe.getIdexe().getSignExt(), 2);
                     stage_if.setPC(stage_if.getPC() + offset);
 
@@ -377,7 +409,7 @@ public class Computer {
                             }
                             else{
                                 char ch = address.charAt(i);
-                                
+
                                 if(ch=='1'){
                                     newAddress = '0' + newAddress;
                                 }
@@ -385,13 +417,13 @@ public class Computer {
                                     newAddress = '1' + newAddress;
                                 }
                             }
-                        offset = Integer.parseInt(newAddress, 2);                        
-                        offset = -1*offset;
+                            offset = Integer.parseInt(newAddress, 2);
+                            offset = -1*offset;
                         }
                     }else{
-                        offset = Integer.parseInt(stage_exe.getIdexe().getSignExt(), 2);                        
+                        offset = Integer.parseInt(stage_exe.getIdexe().getSignExt(), 2);
                     }
-                    
+
                     stage_if.setPC(stage_if.getPC() + offset);
 
                 }
@@ -421,21 +453,21 @@ public class Computer {
                 switch(interruptReason){
                     case 1:
                         switch (syscallReason){
-                        case 10:
-                            System.out.println("exit");
-                            defaultRegisters.setReg(27, interruptReason);
-                            defaultRegisters.setReg(2, 10);
-                            break;
-                        case 20:
-                            defaultRegisters.setReg(27, interruptReason);
-                            defaultRegisters.setReg(2, 20);
-                            break;
+                            case 10:
+                                System.out.println("exit");
+                                defaultRegisters.setReg(27, interruptReason);
+                                defaultRegisters.setReg(2, 10);
+                                break;
+                            case 20:
+                                defaultRegisters.setReg(27, interruptReason);
+                                defaultRegisters.setReg(2, 20);
+                                break;
                         }
-                    ;
+                        ;
                     case 2:
                         //for timer intrupt
                         break;
-                        
+
                     case 3:
                         //for exception
                         break;
@@ -453,7 +485,7 @@ public class Computer {
             return false;
         }
     }
-    public void run_init(String filePath,int lineOfInstructions) {                                          
+    public void run_init(String filePath,int lineOfInstructions) {
         if (isRunable()) {
             timer = new Timer();
             currentLineOfInstructions = 0;
@@ -470,11 +502,11 @@ public class Computer {
             stage_wb = new WB(stage_id, memwb);
             setRunable(false);
         }
-    }                                         
+    }
 
     public int getPC(){
         return stage_if.getPC();
-    }   
+    }
 
 
     /**
@@ -524,19 +556,19 @@ public class Computer {
             else
                 regTable.setValueAt(regfile.getRegfile(n), r, 2*c+1);
         }
-        
+
     }
-    
+
     void fix_memory_table(JTable memoryTable) {
         DefaultTableModel model=new DefaultTableModel(new Object[]{"Address","Content"}, 0);
         memoryTable.setModel(model);
         for (int i = 0; i < aa.getMemory().size(); i++) {
             model.addRow(new Object[]{aa.parse8DigitHex(i), aa.getMemory().get(aa.parse8DigitHex(i))});
-        }            
+        }
     }
-    
+
     Register_file getRegfile(){
-            return stage_id.getRegfile();
+        return stage_id.getRegfile();
     }
 
     void update_other_table(JTable otherTable) {
@@ -558,4 +590,5 @@ public class Computer {
     public ID getStage_id() {
         return stage_id;
     }
+
 }

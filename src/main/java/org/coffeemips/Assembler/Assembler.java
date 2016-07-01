@@ -15,8 +15,8 @@ public class Assembler {
     private File file;
     private int lineNumber = 0;
     private boolean debugMode = false;
-    private boolean modeBit = false; 
-//bitMode represent Assemble in kernel Mode or in user Mode
+    private boolean modeBit = false;
+    //bitMode represent Assemble in kernel Mode or in user Mode
 //(in kernel mode we have functions that not allow in user mode like f010)
     private HashMap<String, String> instructionCodes = new HashMap<String, String>();
     private HashMap<String, instructionParser> instructions = new HashMap<String, instructionParser>();
@@ -60,7 +60,7 @@ public class Assembler {
         instructionCodes.put("j", "000010");
         instructionCodes.put("jal", "000011");
 
-		// SysCall Instruction
+        // SysCall Instruction
         instructionCodes.put("syscall", "001100");
 
     }
@@ -98,8 +98,8 @@ public class Assembler {
         // J-Type Instructions
         instructions.put("j", instructionJ);
         instructions.put("jal", instructionJ);
-		
-		// SysCall Instruction
+
+        // SysCall Instruction
         instructions.put("syscall", instructionSysCall);
     }
 
@@ -281,12 +281,12 @@ public class Assembler {
         @Override
         public String parse(String[] parts) {
             String opcode = instructionCodes.get(parts[0]);
-            String ft = getFloatRegister(parts[1]);
+            String fd = getFloatRegister(parts[1]);
             String fs = getFloatRegister(parts[2]);
-            String fd = getFloatRegister(parts[3]);
+            String ft = getFloatRegister(parts[3]);
             String format = "10000";
             String funct = "000000";
-            return opcode + format + fs + ft + fd  + funct;
+            return opcode + format + ft + fs + fd  + funct;
         }
     };
 
@@ -384,7 +384,7 @@ public class Assembler {
         while(str.length()<num){
             str = "0".concat(str);
         }
-        return str;        
+        return str;
     }
     // Instructions: j, jal
     private instructionParser instructionJ = new instructionParser() {
@@ -408,7 +408,7 @@ public class Assembler {
             return opcode + address;
         }
     };
-	
+
     private  instructionParser instructionSysCall = new instructionParser() {
         public String parse(String[] parts) {
             String opcode = "000000";
@@ -486,44 +486,44 @@ public class Assembler {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 try{
-	                line = line.trim(); // Trim leading & trailing white space
-	                line = line.replaceAll("^.+:([\\s]+)?", ""); // Remove labels
-	                // from the line
-	                line = line.replaceAll("[#].+", ""); // Remove comments
-	                line = line.replace("(", ","); // This line and the following
-	                // one format to allow for sw &
-	                // lw instructions
-	                line = line.replace(")", "");
-	
-	                // Do not try to parse line if it is blank or contains only
-	                // white space/tabs
-	                if (line.isEmpty()) {
-	                    continue;
-	                }
-	
-	                // Split into each word by commas & white space
-	                String[] parts = line.split("[,\\s]+");
-	
-	                // This section is for debugging purposes
-	                if (debugMode) {
-	                    System.out.println();
-	                    for (int i = 0; i < parts.length; i++) {
-	                        System.out.print("[" + parts[i] + "] ");
-	                    }
-	                    System.out.println();
-	                    System.out.print((lineNumber + 1) + ": ");
-	                }
-	                // Parse and write instruction
-	                String ins = instructions.get(parts[0]).parse(parts);
-	                Instruction tmpIns = new Instruction(ins, parse8DigitHex(0x00000000 + 4 * lineNumber));
-	                assembled.put(lineNumber, tmpIns);
-                lineNumber++;
+                    line = line.trim(); // Trim leading & trailing white space
+                    line = line.replaceAll("^.+:([\\s]+)?", ""); // Remove labels
+                    // from the line
+                    line = line.replaceAll("[#].+", ""); // Remove comments
+                    line = line.replace("(", ","); // This line and the following
+                    // one format to allow for sw &
+                    // lw instructions
+                    line = line.replace(")", "");
+
+                    // Do not try to parse line if it is blank or contains only
+                    // white space/tabs
+                    if (line.isEmpty()) {
+                        continue;
+                    }
+
+                    // Split into each word by commas & white space
+                    String[] parts = line.split("[,\\s]+");
+
+                    // This section is for debugging purposes
+                    if (debugMode) {
+                        System.out.println();
+                        for (int i = 0; i < parts.length; i++) {
+                            System.out.print("[" + parts[i] + "] ");
+                        }
+                        System.out.println();
+                        System.out.print((lineNumber + 1) + ": ");
+                    }
+                    // Parse and write instruction
+                    String ins = instructions.get(parts[0]).parse(parts);
+                    Instruction tmpIns = new Instruction(ins, parse8DigitHex(0x00000000 + 4 * lineNumber));
+                    assembled.put(lineNumber, tmpIns);
+                    lineNumber++;
                 }
                 catch(Exception e)
                 {
-                	System.out.println("there was a problem in this instruction:");
-                	System.out.println(line);
-                	throw e;
+                    System.out.println("there was a problem in this instruction:");
+                    System.out.println(line);
+                    throw e;
                 }
             }
             lineNumber = 0;

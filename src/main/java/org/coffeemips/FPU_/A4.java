@@ -10,7 +10,7 @@ import org.coffeemips.HBDMIPS.EXE_MEM;
 
 /**
  *
- * @author roozbeh
+ * @author Msiavashi
  */
 public class A4 {//computer va ID ...va entekhabe reg_des
     int bits = 23, bias = 127, Total = 32;
@@ -27,7 +27,7 @@ public class A4 {//computer va ID ...va entekhabe reg_des
         float result;
         int f3realSign=this.a3a4.f3realSign;
         result = (float) (f3realSign*f*Math.pow(2,e-bias));
-        Structure Struct3=new  Structure(); 
+        Structure Struct3=new  Structure();
         Struct3 = Util.IEEERepresentation(Struct3, result, bits, bias);
 
 
@@ -53,15 +53,15 @@ public class A4 {//computer va ID ...va entekhabe reg_des
         e = e3;
         result = (float) (f3realSign*feven*Math.pow(2,e-bias));
         Struct3 = Util.IEEERepresentation(Struct3, result, bits, bias);
-        
+
         //use this.a3a4.signExt
         float MyResult = Struct3.IEEE;
-        
+        System.out.println(MyResult);
         this.exemem.setALU_result(MyResult);
         this.exemem.setControlBits(this.a3a4.controlBits);
-        this.exemem.setNew_PC(this.new_pc(MyResult,a3a4.controlBits.charAt(6), this.a3a4.PC,this.a3a4.signExt));///set karaden pc jadid
+        // this.exemem.setNew_PC();///set karaden pc jadid
         this.exemem.setRT_DATA(this.a3a4.rt);//rt data
-        
+
         if(MyResult==0){
             this.exemem.setZERO(true);
         }
@@ -75,15 +75,15 @@ public class A4 {//computer va ID ...va entekhabe reg_des
             this.exemem.setWrite_Register(this.a3a4.reg_des);
         }
         return this.exemem;
-        
+
 
     }
-    
+
     public int new_pc(float res,char signal,int pc,String imm){
         int ans=pc;
         if(res==0 && signal=='1'){
             ans = Integer.parseInt(imm, 2);///////////////IMPORTANT should never execute ......
-            
+
         }else{
             ans=pc;
         }
